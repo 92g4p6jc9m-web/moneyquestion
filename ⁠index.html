@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Важный вопрос</title>
-  <!-- Подключаем конфетти -->
+
+  <title>Важный вопрос ❤️</title>
+
+  <!-- Конфетти -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  
-  <!-- Подключаем Firebase SDK -->
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
@@ -17,176 +19,404 @@
       margin: 0;
       padding: 0;
     }
+
     body {
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      background-color: #fce4ec;
-      font-family: Arial, sans-serif;
       padding: 20px;
+      background: #fce4ec;
+      font-family: Arial, sans-serif;
     }
+
     .card {
-      background: #ffffff;
+      width: 100%;
+      max-width: 400px;
       padding: 30px;
+      margin-bottom: 25px;
+      text-align: center;
+      background: white;
       border-radius: 20px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-      margin-bottom: 30px;
     }
+
     h1 {
-      color: #d81b60;
       margin-bottom: 30px;
+      color: #d81b60;
       font-size: 24px;
+      line-height: 1.4;
     }
+
     .buttons {
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 15px;
+      flex-wrap: wrap;
     }
+
     button {
-      padding: 12px 24px;
-      font-size: 18px;
       border: none;
       border-radius: 10px;
+      padding: 12px 24px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
       cursor: pointer;
       transition: all 0.2s ease;
     }
+
     #btn-yes {
-      background-color: #4caf50;
-      color: white;
-      font-weight: bold;
+      background: #4caf50;
     }
+
     #btn-no {
-      background-color: #f44336;
-      color: white;
-      font-weight: bold;
+      background: #f44336;
     }
-    
-    /* Блок с результатами внизу */
+
+    button:active {
+      transform: scale(0.95);
+    }
+
     .results-card {
-      background: #ffffff;
+      width: 100%;
+      max-width: 400px;
       padding: 20px;
+      background: white;
       border-radius: 15px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-      max-width: 400px;
-      width: 100%;
     }
+
     .results-card h2 {
-      font-size: 18px;
-      color: #333;
       margin-bottom: 15px;
-      border-bottom: 2px solid #fce4ec;
       padding-bottom: 8px;
+      color: #333;
+      font-size: 18px;
+      border-bottom: 2px solid #fce4ec;
     }
-    ul {
+
+    #answers-list {
       list-style: none;
-      max-height: 150px;
+      max-height: 200px;
       overflow-y: auto;
       text-align: left;
     }
-    li {
-      padding: 6px 10px;
-      background: #f9f9f9;
+
+    #answers-list li {
+      padding: 8px 10px;
       margin-bottom: 5px;
+      background: #f9f9f9;
       border-radius: 6px;
-      font-size: 14px;
       color: #555;
+      font-size: 14px;
+    }
+
+    .empty {
+      text-align: center !important;
+      color: #999 !important;
+    }
+
+    .error {
+      margin-top: 10px;
+      color: #d32f2f;
+      font-size: 13px;
+      text-align: center;
     }
   </style>
 </head>
+
 <body>
 
-  <!-- Карточка с вопросом -->
+  <!-- ВОПРОС -->
   <div class="card">
-    <h1 id="question">маған ақша бересізба?</h1>
+
+    <h1 id="question">
+      маған ақша бересізба?
+    </h1>
+
     <div class="buttons" id="btn-group">
-      <button id="btn-yes">ия</button>
-      <button id="btn-no">жоқ</button>
+
+      <button id="btn-yes">
+        ия
+      </button>
+
+      <button id="btn-no">
+        жоқ
+      </button>
+
     </div>
+
+    <p id="error-message" class="error"></p>
+
   </div>
 
-  <!-- Блок с ответами в самом конце -->
+
+  <!-- ИСТОРИЯ ОТВЕТОВ -->
   <div class="results-card">
-    <h2>История ответов:</h2>
+
+    <h2>
+      История ответов:
+    </h2>
+
     <ul id="answers-list">
-      <!-- Сюда автоматически будут добавляться ответы из базы -->
+
+      <li id="empty-message" class="empty">
+        Пока ответов нет
+      </li>
+
     </ul>
+
   </div>
+
 
   <script>
-    // 1. Конфигурация Firebase (замените на свои данные из Firebase Console)
+
+    // ==========================================
+    // FIREBASE
+    // ==========================================
+
     const firebaseConfig = {
-      apiKey: "ВАШ_API_KEY",
-      authDomain: "ВАШ_PROJECT_ID.firebaseapp.com",
-      databaseURL: "https://ВАШ_PROJECT_ID-default-rtdb.firebaseio.com",
-      projectId: "ВАШ_PROJECT_ID",
-      storageBucket: "ВАШ_PROJECT_ID.appspot.com",
-      messagingSenderId: "ВАШ_SENDER_ID",
-      appId: "ВАШ_APP_ID"
+
+      apiKey:
+        "AIzaSyAvXkXIzPVeTmWNQefIhgxphLc2pmh8nLo",
+
+      authDomain:
+        "moneyquestion-2eeac.firebaseapp.com",
+
+      databaseURL:
+        "https://moneyquestion-2eeac-default-rtdb.europe-west1.firebasedatabase.app/",
+
+      projectId:
+        "moneyquestion-2eeac",
+
+      storageBucket:
+        "moneyquestion-2eeac.firebasestorage.app",
+
+      messagingSenderId:
+        "408323914103",
+
+      appId:
+        "1:408323914103:web:af614b9e62f176afb0c972"
+
     };
 
-    // Инициализация Firebase
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    const answersRef = database.ref('answers');
 
-    // Элементы страницы
-    const btnYes = document.getElementById('btn-yes');
-    const btnNo = document.getElementById('btn-no');
-    const question = document.getElementById('question');
-    const btnGroup = document.getElementById('btn-group');
-    const answersList = document.getElementById('answers-list');
+    // ==========================================
+    // ЗАПУСК FIREBASE
+    // ==========================================
+
+    firebase.initializeApp(firebaseConfig);
+
+    const database = firebase.database();
+
+    const answersRef =
+      database.ref("answers");
+
+
+    // ==========================================
+    // ЭЛЕМЕНТЫ
+    // ==========================================
+
+    const btnYes =
+      document.getElementById("btn-yes");
+
+    const btnNo =
+      document.getElementById("btn-no");
+
+    const question =
+      document.getElementById("question");
+
+    const btnGroup =
+      document.getElementById("btn-group");
+
+    const answersList =
+      document.getElementById("answers-list");
+
+    const emptyMessage =
+      document.getElementById("empty-message");
+
+    const errorMessage =
+      document.getElementById("error-message");
+
+
+    // ==========================================
+    // НАСТРОЙКИ КНОПКИ "ИЯ"
+    // ==========================================
 
     let yesSize = 18;
     let paddingSize = 12;
 
-    // Логика кнопки "Нет"
-    btnNo.addEventListener('click', () => {
+
+    // ==========================================
+    // КНОПКА "ЖОҚ"
+    // ==========================================
+
+    btnNo.addEventListener("click", async () => {
+
+      await saveAnswer("ЖОҚ ❌");
+
       yesSize += 15;
       paddingSize += 8;
-      btnYes.style.fontSize = `${yesSize}px`;
-      btnYes.style.padding = `${paddingSize}px ${paddingSize * 2}px`;
 
-      let currentOpacity = parseFloat(window.getComputedStyle(btnNo).opacity);
+      btnYes.style.fontSize =
+        `${yesSize}px`;
+
+      btnYes.style.padding =
+        `${paddingSize}px ${paddingSize * 2}px`;
+
+
+      const currentOpacity =
+        parseFloat(
+          window.getComputedStyle(btnNo).opacity
+        );
+
+
       if (currentOpacity > 0.3) {
-        btnNo.style.opacity = currentOpacity - 0.25;
+
+        btnNo.style.opacity =
+          currentOpacity - 0.25;
+
       } else {
-        btnNo.style.display = 'none';
+
+        btnNo.style.display =
+          "none";
+
       }
+
     });
 
-    // Логика кнопки "Да"
-    btnYes.addEventListener('click', () => {
-      question.textContent = 'Ура! Спасибо! ❤️';
-      btnGroup.style.display = 'none';
 
-      // Эффект конфетти
+    // ==========================================
+    // КНОПКА "ИЯ"
+    // ==========================================
+
+    btnYes.addEventListener("click", async () => {
+
+      await saveAnswer("ИЯ! 🎉");
+
+      question.textContent =
+        "Ура! Спасибо! ❤️";
+
+      btnGroup.style.display =
+        "none";
+
+
+      // 🎉 КОНФЕТТИ
       confetti({
+
         particleCount: 150,
+
         spread: 70,
-        origin: { y: 0.6 }
+
+        origin: {
+          y: 0.6
+        }
+
       });
 
-      // Сохраняем ответ в базе данных с датой и временем
-      const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      answersRef.push({
-        text: "Кто-то ответил: ДА! 🎉",
-        time: timeString
-      });
     });
 
-    // Чтение ответов из базы в реальном времени
-    answersRef.on('child_added', (snapshot) => {
-      const data = snapshot.val();
-      const li = document.createElement('li');
-      li.textContent = `[${data.time}] ${data.text}`;
-      answersList.prepend(li); // Добавляет новые ответы в начало списка
-    });
+
+    // ==========================================
+    // СОХРАНЕНИЕ ОТВЕТА
+    // ==========================================
+
+    async function saveAnswer(answer) {
+
+      try {
+
+        const now = new Date();
+
+        const timeString =
+          now.toLocaleString("ru-RU", {
+
+            day: "2-digit",
+
+            month: "2-digit",
+
+            year: "numeric",
+
+            hour: "2-digit",
+
+            minute: "2-digit"
+
+          });
+
+
+        await answersRef.push({
+
+          text: answer,
+
+          time: timeString
+
+        });
+
+
+        errorMessage.textContent = "";
+
+
+      } catch (error) {
+
+        console.error(
+          "Ошибка Firebase:",
+          error
+        );
+
+        errorMessage.textContent =
+          "Не удалось сохранить ответ 😔";
+
+      }
+
+    }
+
+
+    // ==========================================
+    // ЗАГРУЗКА ИСТОРИИ
+    // ==========================================
+
+    answersRef.on(
+      "child_added",
+
+      (snapshot) => {
+
+        const data =
+          snapshot.val();
+
+
+        if (emptyMessage) {
+          emptyMessage.remove();
+        }
+
+
+        const li =
+          document.createElement("li");
+
+
+        li.textContent =
+          `[${data.time}] ${data.text}`;
+
+
+        answersList.prepend(li);
+
+      },
+
+      (error) => {
+
+        console.error(
+          "Ошибка чтения Firebase:",
+          error
+        );
+
+        errorMessage.textContent =
+          "Не удалось загрузить историю ответов.";
+
+      }
+
+    );
+
   </script>
+
 </body>
 </html>
