@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Важный вопрос</title>
+  <!-- Подключаем конфетти -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <!-- Подключаем Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-color: #fce4ec;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .card {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    h1 {
+      color: #d81b60;
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    #btn-yes {
+      background-color: #4caf50;
+      color: white;
+      font-weight: bold;
+    }
+    #btn-no {
+      background-color: #f44336;
+      color: white;
+      font-weight: bold;
+    }
+    
+    /* Блок с результатами внизу */
+    .results-card {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      max-width: 400px;
+      width: 100%;
+    }
+    .results-card h2 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #fce4ec;
+      padding-bottom: 8px;
+    }
+    ul {
+      list-style: none;
+      max-height: 150px;
+      overflow-y: auto;
+      text-align: left;
+    }
+    li {
+      padding: 6px 10px;
+      background: #f9f9f9;
+      margin-bottom: 5px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Карточка с вопросом -->
+  <div class="card">
+    <h1 id="question">маған ақша бересізба?</h1>
+    <div class="buttons" id="btn-group">
+      <button id="btn-yes">ия</button>
+      <button id="btn-no">жоқ</button>
+    </div>
+  </div>
+
+  <!-- Блок с ответами в самом конце -->
+  <div class="results-card">
+    <h2>История ответов:</h2>
+    <ul id="answers-list">
+      <!-- Сюда автоматически будут добавляться ответы из базы -->
+    </ul>
+  </div>
+
+  <script>
+    // 1. Конфигурация Firebase (замените на свои данные из Firebase Console)
+    const firebaseConfig = {
+      apiKey: "ВАШ_API_KEY",
+      authDomain: "ВАШ_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://ВАШ_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId: "ВАШ_PROJECT_ID",
+      storageBucket: "ВАШ_PROJECT_ID.appspot.com",
+      messagingSenderId: "ВАШ_SENDER_ID",
+      appId: "ВАШ_APP_ID"
+    };
+
+    // Инициализация Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const answersRef = database.ref('answers');
+
+    // Элементы страницы
+    const btnYes = document.getElementById('btn-yes');
+    const btnNo = document.getElementById('btn-no');
+    const question = document.getElementById('question');
+    const btnGroup = document.getElementById('btn-group');
+    const answersList = document.getElementById('answers-list');
+
+    let yesSize = 18;
+    let paddingSize = 12;
+
+    // Логика кнопки "Нет"
+    btnNo.addEventListener('click', () => {
+      yesSize += 15;
+      paddingSize += 8;
+      btnYes.style.fontSize = `${yesSize}px`;
+      btnYes.style.padding = `${paddingSize}px ${paddingSize * 2}px`;
+
+      let currentOpacity = parseFloat(window.getComputedStyle(btnNo).opacity);
+      if (currentOpacity > 0.3) {
+        btnNo.style.opacity = currentOpacity - 0.25;
+      } else {
+        btnNo.style.display = 'none';
+      }
+    });
+
+    // Логика кнопки "Да"
+    btnYes.addEventListener('click', () => {
+      question.textContent = 'Ура! Спасибо! ❤️';
+      btnGroup.style.display = 'none';
+
+      // Эффект конфетти
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      // Сохраняем ответ в базе данных с датой и временем
+      const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      answersRef.push({
+        text: "Кто-то ответил: ДА! 🎉",
+        time: timeString
+      });
+    });
+
+    // Чтение ответов из базы в реальном времени
+    answersRef.on('child_added', (snapshot) => {
+      const data = snapshot.val();
+      const li = document.createElement('li');
+      li.textContent = `[${data.time}] ${data.text}`;
+      answersList.prepend(li); // Добавляет новые ответы в начало списка
+    });
+  </script>
+</body>
+</html>
